@@ -22,6 +22,18 @@ var passport = require("passport");
 app.use(passport.initialize());
 app.use(passport.session());
 
+const ObjectID = require("mongodb").ObjectID;
+
+passport.serializeUser(function(user,done){
+  done(null,user._id);
+});
+
+//passport.deserializeUser(function(id,done){
+//   myDB.findOne({_id: new ObjectID(id)}, function(err,doc){
+ //     done(null,null);
+ //  });
+//});
+
 fccTesting(app); //For FCC testing purposes
 app.use('/public', express.static(process.cwd() + '/public'));
 app.use(express.json());
