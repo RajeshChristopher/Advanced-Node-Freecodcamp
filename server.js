@@ -8,6 +8,20 @@ const app = express();
 
 app.set("view engine","pug");
 
+var session = require("express-session");
+
+app.use(session({
+    secret: process.env.SESSION_SECRET,
+    resave: true,
+    saveUninitialized: true,
+    cookie: {secure: false}
+}))
+
+var passport = require("passport");
+
+app.use(passport.initialize());
+app.use(passport.session());
+
 fccTesting(app); //For FCC testing purposes
 app.use('/public', express.static(process.cwd() + '/public'));
 app.use(express.json());
