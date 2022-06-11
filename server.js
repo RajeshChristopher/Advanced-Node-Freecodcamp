@@ -75,6 +75,26 @@ myDB(async function (client){
   //res.render(__dirname + "/views/pug/index.pug",{title:"Hello",message:"Please login"});
 //});
 
+const LocalStrategy = require("passport-local");
+
+passport.use(new LocalStrategy(function(username, password, done){
+  myDataBase.findOne({username: username},function(err,user){
+    console.log("User" + username + " tried to login");
+    if(err){
+      return done(err);
+    }
+    if(!user){
+      return done(null,false);
+    }
+    if(password !== user.password){
+      return done(null,false)
+    }
+    return done(null,user);
+  });
+}));
+
+
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log('Listening on port ' + PORT);
