@@ -36,7 +36,8 @@ myDB(async function (client){
     app.route("/").get(function(req,res){
       res.render("pug",{
         title: "Connected to database",
-        message: "Please login"
+        message: "Please login",
+        showLogin: true
       });
     });
     
@@ -92,6 +93,15 @@ passport.use(new LocalStrategy(function(username, password, done){
     return done(null,user);
   });
 }));
+
+
+app.route("/login").post(passport.authenticate("local",{failureRedirect:"/"}),(req,res) => {
+  res.redirect("/profile");
+});
+
+app.route("/profile").get((req,res) => {
+  res.render(__dirname + 'views/pug/profile.pug');
+});
 
 
 
