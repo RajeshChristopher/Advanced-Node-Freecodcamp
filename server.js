@@ -94,12 +94,20 @@ passport.use(new LocalStrategy(function(username, password, done){
   });
 }));
 
+function ensureAuthenticated(req,res,next){
+  if(req.isAuthenticated()){
+    return next;
+  }
+  else{
+    res.redirect("/");
+  }
+};
 
 app.route("/login").post(passport.authenticate("local",{failureRedirect:"/"}),(req,res) => {
   res.redirect("/profile");
 });
 
-app.route("/profile").get((req,res) => {
+app.route("/profile").get(ensureAuthenticated,(req,res) => {
   res.render(__dirname + 'views/pug/profile.pug');
 });
 
