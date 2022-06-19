@@ -14,13 +14,13 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 
-var session = require("express-session");
+var session = require('express-session');
 
 app.use(session({
-    secret: process.env.SESSION_SECRET,
-    resave: true,
-    saveUninitialized: true,
-    cookie: {secure: false}
+  secret: process.env.SESSION_SECRET,
+  resave: true,
+  saveUninitialized: true,
+  cookie: {secure: false}
 }))
 
 var passport = require("passport");
@@ -30,53 +30,28 @@ app.use(passport.session());
 
 const ObjectID = require("mongodb").ObjectID;
 
+const LocalStrategy = require("passport-local");
+
 myDB(async function (client){
-     const myDataBase = await client.db("Advanced-node-db").collection("Advanced-node-db-collection");
-    
-    app.route("/").get(function(req,res){
-      res.render("pug",{
-        title: "Connected to database",
-        message: "Please login",
-        showLogin: true
-      });
+  const myDataBase = await client.db("Advanced-node-db").collection("Advanced-node-db-collection");
+
+  app.route("/").get(function(req,res){
+    res.render("pug",{
+      title: "Connected to database",
+      message: "Please login",
+      showLogin: true
     });
-    
-    passport.serializeUser(function(user,done){
-       done(null,user._id);
-    });
-    
-    passport.deserializeUser(function(id,done){
-       myDB.findOne({_id: new ObjectID(id)},function(err,doc){
-          done(null,doc);
-       });
-    });
-    
-     }).catch(function e(){
-           app.route("/").get(function(req,res){
-              res.render("pug",{
-                title: "e",
-                message: "Unable to login"
-              });
-           });
+  });
+
+  passport.serializeUser(function(user,done){
+  done(null,user._id);
 });
 
-//passport.serializeUser(function(user,done){
-  //done(null,user._id);
-//});
-
-//passport.deserializeUser(function(id,done){
-//   myDB.findOne({_id: new ObjectID(id)}, function(err,doc){
- //     done(null,null);
- //  });
-//});
-
-
-
-//app.route('/').get((req, res) => {
-  //res.render(__dirname + "/views/pug/index.pug",{title:"Hello",message:"Please login"});
-//});
-
-const LocalStrategy = require("passport-local");
+passport.deserializeUser(function(id,done){
+  myDB.findOne({_id: new ObjectID(id)},function(err,doc){
+    done(null,doc);
+  });
+});
 
 passport.use(new LocalStrategy(function(username, password, done){
   myDataBase.findOne({username: username},function(err,user){
@@ -94,6 +69,56 @@ passport.use(new LocalStrategy(function(username, password, done){
   });
 }));
 
+
+app.route("/login").post(passport.authenticate("local",{failureRedirect:"/"}),(req,res) => {
+  res.redirect("/profile");
+});
+
+app.route("/profile").get(ensureAuthenticated,(req,res) => {
+  res.render(__dirname + 'views/pug/profile.pug',{username: req.user.username});
+});
+
+app.route("/logout").get((req,res) => {
+  req.logout();
+  res.redirect("/");
+});
+
+app.use((req, res, next) => {
+  res.status(404)
+     .type('text')
+    .send('Not Found');
+});
+  
+}).catch(function e(){
+  app.route("/").get(function(req,res){
+    res.render("pug",{
+      title: "e",
+      message: "Unable to login"
+    });
+  });
+});
+
+//passport.serializeUser(function(user,done){
+  //done(null,user._id);
+//});
+
+//passport.deserializeUser(function(id,done){
+ // myDB.findOne({_id: new ObjectID(id)},function(err,doc){
+ //   done(null,null);
+ // });
+//});
+
+
+
+//app.route('/').get((req, res) => {
+  //res.render(__dirname + '/views/pug/index.pug',{title: "Hello",message: "Please login"});
+//});
+
+
+
+
+
+
 function ensureAuthenticated(req,res,next){
   if(req.isAuthenticated()){
     return next;
@@ -102,14 +127,6 @@ function ensureAuthenticated(req,res,next){
     res.redirect("/");
   }
 };
-
-app.route("/login").post(passport.authenticate("local",{failureRedirect:"/"}),(req,res) => {
-  res.redirect("/profile");
-});
-
-app.route("/profile").get(ensureAuthenticated,(req,res) => {
-  res.render(__dirname + 'views/pug/profile.pug');
-});
 
 
 
