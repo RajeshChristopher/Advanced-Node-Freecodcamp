@@ -39,7 +39,8 @@ myDB(async function (client){
     res.render("pug",{
       title: "Connected to database",
       message: "Please login",
-      showLogin: true
+      showLogin: true,
+      showRegistration: true
     });
   });
 
@@ -88,6 +89,34 @@ app.use((req, res, next) => {
      .type('text')
     .send('Not Found');
 });
+  
+app.route("/register").post((req,res,next) => {
+  myDataBase.findOne({username: req.body.username}, function(err,user){
+    if(err){
+      next(err);
+    }else if(user){
+      res.redirect("/");
+    }else{
+      myDataBase.insertOne(
+        {username: req.body.username,
+         password: req.body.password
+        },
+        function(err,doc){
+       if(err){
+         res.redirect("/");
+       }else{
+         next(null,doc.ops[0]);
+       }
+     }
+      )
+    }
+  }
+                    )
+},
+  passport.authenticate("local",{failureRedirect:"/"}),function(req,res){
+    res.redirect("/profile");
+  }
+                            );
   
 }).catch(function e(){
   app.route("/").get(function(req,res){
