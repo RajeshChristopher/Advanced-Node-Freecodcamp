@@ -4,6 +4,8 @@ const express = require('express');
 const myDB = require('./connection');
 const fccTesting = require('./freeCodeCamp/fcctesting.js');
 
+const bcrypt = require('bcrypt');
+
 const app = express();
 
 app.set("view engine","pug");
@@ -63,8 +65,11 @@ passport.use(new LocalStrategy(function(username, password, done){
     if(!user){
       return done(null,false);
     }
-    if(password !== user.password){
-      return done(null,false)
+    //if(password !== user.password){
+     // return done(null,false)
+   // }
+    if(!bcrypt.compareSync(password,user.password)){
+      return done(null,false);
     }
     return done(null,user);
   });
@@ -92,6 +97,7 @@ app.use((req, res, next) => {
   
 app.route("/register").post((req,res,next) => {
   myDataBase.findOne({username: req.body.username}, function(err,user){
+    const hash = bcrypt.hashSync(req.body.password,12);
     if(err){
       next(err);
     }else if(user){
@@ -99,7 +105,7 @@ app.route("/register").post((req,res,next) => {
     }else{
       myDataBase.insertOne(
         {username: req.body.username,
-         password: req.body.password
+         password: hash
         },
         function(err,doc){
        if(err){
